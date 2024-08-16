@@ -10,6 +10,9 @@ import {
   Box,
   Typography,
 } from "@mui/material";
+import Navbar from './components/Navbar/Navbar';
+import HeroSection from './components/HeroSection/HeroSection';
+
 
 export default function Home() {
   return (
@@ -18,8 +21,8 @@ export default function Home() {
         <title>Memoria</title>
         <meta name="description" content="Create flashcard from your text" />
       </Head>
-
-      <AppBar position="static">
+      <Navbar />
+      {/* <AppBar position="static">
         <Toolbar>
           <Typography variant="h6">Flashcard SaaS</Typography>
           <SignedOut>
@@ -30,9 +33,10 @@ export default function Home() {
             <UserButton />
           </SignedIn>
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
+            <HeroSection />
 
-      <Box
+      {/* <Box
         sx={{
           textAlign: "center",
           my: 4,
@@ -45,7 +49,7 @@ export default function Home() {
         <Button variant="contained" color="primary" sx={{ mt: 2 }}>
           Get Started
         </Button>
-      </Box>
+      </Box> */}
 
       <Box sx={{ my: 6 }}>
         <Typography variant="h4" component="h2" sx={{ mb: 4 }}>

@@ -20,7 +20,7 @@ import {
     DialogTitle
 } from "@mui/material";
 import { writeBatch, doc, collection, getDoc } from 'firebase/firestore';
-import { db } from '/Users/navya/memoria-flashcards/firebase'; // Adjust the path to your firebase config
+import { db } from './../firebase'; // Adjust the path to your firebase config
 
 export default function Generate() {
     const [flashcards, setFlashcards] = useState([]);
@@ -32,13 +32,28 @@ export default function Generate() {
     const [user, setUser] = useState(null); // Adjust how you get the user information
 
     const handleSubmit = async () => {
-        fetch('api/generate', {
-            method: 'POST',
-            body: text,
-        })
-        .then((res) => res.json())
-        .then((data) => setFlashcards(data))
-    }
+        try {
+            const flash = await fetch('api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text }), // Convert text to JSON string
+            });
+    
+            const jsonData = await flash.json();
+    
+            if (jsonData && jsonData.flashcards) {
+                // Parse the flashcards JSON string
+                const parsedFlashcards = JSON.parse(jsonData.flashcards).flashcards;
+                setFlashcards(parsedFlashcards);
+            }
+    
+            console.log(flashcards);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
     
 
     const handleCardClick = (id) => {

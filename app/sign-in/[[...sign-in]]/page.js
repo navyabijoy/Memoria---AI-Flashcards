@@ -1,10 +1,11 @@
 import {AppBar, Box, Button, Container, Toolbar, Typography} from '@mui/material'
 import Link from 'next/link'
 import { SignIn } from '@clerk/nextjs'
-
+// import Navbar from './components/Navbar/Navbar';
 export default function SignUpPage() {
     return <Container maxWidth='100vw'>
-        <AppBar position="static" sx= {{backgroundColor: "#3f51b5"}}>
+        {/* <Navbar /> */}
+        {/* <AppBar position="static" sx= {{backgroundColor: "#3f51b5"}}>
             <Toolbar>
                 <Typography vairant="h6" sx={{ flexGrow: 1,}}>
                     Flascard SaaS
@@ -18,7 +19,7 @@ export default function SignUpPage() {
                     </Link>
                 </Button>
             </Toolbar>
-        </AppBar>
+        </AppBar> */}
         <Box
         display="flex" flexDirection="column" alignItems="center" justifyContent>
             <Typography vairnat="h4">Sign In</Typography>
