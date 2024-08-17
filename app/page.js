@@ -202,40 +202,22 @@ export default function Home() {
       <Box component="footer" sx={{ py: 4, mt: 6 }}>
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          <Grid item xs={12} sm={6} md={4}>
-            <Typography variant="body1">
+          <Grid item xs={12} sm={6} md={4} >
+            <Typography variant="body1" color={'gray'}>
               Designed by <b>Navya Bijoy</b>
             </Typography>
           </Grid>
-          <Grid item xs={12} md={4}>
-            <Box display="flex" justifyContent="flex-end" gap={2}>
-              <IconButton
-                component="a"
-                href="https://twitter.com/yourusername" // Replace with your Twitter URL
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Twitter"
-              >
-                <TwitterIcon />
-              </IconButton>
-              <IconButton
-                component="a"
-                href="https://linkedin.com/in/yourusername" // Replace with your LinkedIn URL
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn"
-              >
-                <LinkedInIcon />
-              </IconButton>
-              <IconButton
-                component="a"
-                href="mailto:navyabijoy14@gmail.com" // Replace with your email address
-                aria-label="Email"
-              >
-                <MailIcon />
-              </IconButton>
-            </Box>
-          </Grid>
+          <Grid item xs={12} sm={6} container justifyContent="flex-end">
+                            <IconButton href="https://twitter.com/yourtwitterhandle" target="_blank" rel="noopener noreferrer" color="inherit">
+                                <TwitterIcon />
+                            </IconButton>
+                            <IconButton href="https://www.linkedin.com/in/navya-bijoy-883a35249/" target="_blank" rel="noopener noreferrer" color="inherit">
+                                <LinkedInIcon />
+                            </IconButton>
+                            <IconButton href="mailto:navyabijoy14@gmail.com" target="_blank" rel="noopener noreferrer" color="inherit">
+                                <MailIcon />
+                            </IconButton>
+                        </Grid>
         </Grid>
         <Typography
           variant="body2"
