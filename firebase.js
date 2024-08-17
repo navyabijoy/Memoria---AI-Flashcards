@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase/firestore'; // Correct import for Firesto
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDnsz5qJ5CIs3VP7goTimCMJR-zzw5zXzs",
+  apiKey: process.env.FIREBASE_API_KEY,
   authDomain: "memoria-flashcards.firebaseapp.com",
   projectId: "memoria-flashcards",
   storageBucket: "memoria-flashcards.appspot.com",
