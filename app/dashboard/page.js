@@ -4,7 +4,24 @@ import { useState, useEffect } from "react";
 import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import Head from "next/head";
-
+import {
+  Grid,
+  Button,
+  Container,
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardActionArea,
+  TextField,
+  Paper,
+  IconButton,
+  DialogActions,
+  Dialog,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
+} from "@mui/material";
 import {
   writeBatch,
   doc,
@@ -14,7 +31,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase"; // Adjust the path to your firebase config
 import Navbar from "../components/Navbar/Navbar";
-import { Container, Grid, Typography, IconButton } from "@mui/material";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import MailIcon from "@mui/icons-material/Mail";
@@ -74,12 +90,12 @@ export default function Dashboard() {
 }
 
 
-const handleCardClick = (index) => {
-    setFlipped((prevFlipped) => ({
-      ...prevFlipped,
-      [index]: !prevFlipped[index]
-    }));
-  };
+const handleCardClick = (id) => {
+  setFlipped((prev) => ({
+    ...prev,
+    [id]: !prev[id],
+  }));
+};
 
   const viewDeck = async (deckName) => {
     setSelectedDeck(deckName);
@@ -185,13 +201,16 @@ const handleCardClick = (index) => {
                       >
                         <div className="absolute inset-0 backface-hidden">
                           <div className="w-full h-full flex items-center justify-center bg-white shadow rounded-md p-4">
-                            <p className="text-center">{flashcard.front}</p>
+                          <Typography variant="h5" component="div">
+                                                            {flashcard.front}
+                                                        </Typography>
                           </div>
                         </div>
                         <div className="absolute inset-0 backface-hidden rotate-y-180">
                           <div className="w-full h-full flex items-center justify-center bg-purple-100 shadow rounded-md p-4">
-                            <p className="text-center">{flashcard.back}</p>
-                          </div>
+                          <Typography>
+                                                            {flashcard.back}
+                                                        </Typography>                          </div>
                         </div>
                       </div>
                     </div>
@@ -239,28 +258,55 @@ const handleCardClick = (index) => {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {selectedDeckCards.map((flashcard, index) => (
-                    <div
-                      key={index} // Use the original index for the card within the selected deck
-                      onClick={() => handleCardClick(`selected-${index}`)} // Generate the key for the flipped state
-                      className="bg-gray-50 p-4 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
-                    >
-                      <div
-                        className={`relative w-full h-40 ${
-                          flipped[`selected-${index}`] ? "rotate-y-180" : "" // Use the generated key for flipping
-                        } transform transition-transform duration-500`}
-                      >
-                        <div className="absolute inset-0 backface-hidden">
-                          <div className="w-full h-full flex items-center justify-center bg-white shadow rounded-md p-4">
-                            <p className="text-center">{flashcard.front}</p>
-                          </div>
-                        </div>
-                        <div className="absolute inset-0 backface-hidden rotate-y-180">
-                          <div className="w-full h-full flex items-center justify-center bg-purple-100 shadow rounded-md p-4">
-                            <p className="text-center">{flashcard.back}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                          <Card>
+                              <CardActionArea onClick={() => handleCardClick(index)}>
+                                  <CardContent>
+                                      <Box sx={{
+                                          perspective: '1000px',
+                                          '& > div': {
+                                              transition: 'transform 0.6s',
+                                              transformStyle: 'preserve-3d',
+                                              position: 'relative',
+                                              width: '100%',
+                                              height: '200px',
+                                              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                                              transform: flipped[index]
+                                                  ? 'rotateY(180deg)'
+                                                  : 'rotateY(0deg)',
+                                          },
+                                          '& > div > div': {
+                                              position: 'absolute',
+                                              width: '100%',
+                                              height: '200px',
+                                              backfaceVisibility: 'hidden',
+                                              display: 'flex',
+                                              justifyContent: 'center',
+                                              alignItems: 'center',
+                                              padding: 2,
+                                              boxSizing: 'border-box'
+                                          },
+                                          '& > div > div:nth-of-type(2)': {
+                                              transform: 'rotateY(180deg)'
+                                          }
+                                      }}>
+                                          <div>
+                                              <div>
+                                                  <Typography variant="h5" component="div">
+                                                      {flashcard.front}
+                                                  </Typography>
+                                              </div>
+                                              <div>
+                                                  <Typography variant="h5" component="div">
+                                                      {flashcard.back}
+                                                  </Typography>
+                                              </div>
+                                          </div>
+                                      </Box>
+                                  </CardContent>
+                              </CardActionArea>
+                          </Card>
+                      </Grid>
                   ))}
                 </div>
               </div>
