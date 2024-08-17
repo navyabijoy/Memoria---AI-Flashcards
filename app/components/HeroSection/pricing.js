@@ -66,9 +66,7 @@ const PricingSection = () => {
                     </li>
                   ))}
                 </ul>
-                <Link href="/signup" className={`block w-full py-3 px-4 rounded-lg text-center font-semibold transition-colors duration-200 ${plan.buttonStyle}`}>
-                  Get Started
-                </Link>
+                
               </div>
             </div>
           ))}
