@@ -16,8 +16,8 @@ import {
   TextField,
   Paper,
   IconButton,
-  DialogActions,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle
@@ -29,11 +29,12 @@ import {
   getDoc,
   getDocs,
 } from "firebase/firestore";
-import { db } from "../../firebase"; // Adjust the path to your firebase config
+import { db } from "../../firebase";
 import Navbar from "../components/Navbar/Navbar";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import MailIcon from "@mui/icons-material/Mail";
+import EditIcon from "@mui/icons-material/Edit";
 
 export default function Dashboard() {
   const [flashcards, setFlashcards] = useState([]);
@@ -44,6 +45,8 @@ export default function Dashboard() {
   const [userDecks, setUserDecks] = useState([]);
   const [selectedDeck, setSelectedDeck] = useState(null);
   const [selectedDeckCards, setSelectedDeckCards] = useState([]);
+  const [editingCard, setEditingCard] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { user } = useUser();
 
   useEffect(() => {
@@ -63,39 +66,60 @@ export default function Dashboard() {
   };
 
   const handleSubmit = async () => {
+    setIsGenerating(true);
     try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            body: text,
-            headers: {
-                'Content-Type': 'text/plain', // Ensure this matches the backend
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${response.statusText}`);
-        }
-
-        const rawData = await response.json(); // Directly parse JSON
-        console.log('Parsed Data:', rawData);
-
-        if (!rawData.flashcards || !Array.isArray(rawData.flashcards)) {
-            throw new Error('Invalid response format');
-        }
-
-        setFlashcards(rawData.flashcards);
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+  
+      const jsonData = await response.json();
+  
+      if (jsonData && jsonData.flashcards) {
+        // Ensure we're getting an array of flashcards
+        const parsedFlashcards = Array.isArray(jsonData.flashcards) 
+          ? jsonData.flashcards 
+          : JSON.parse(jsonData.flashcards).flashcards;
+        
+        setFlashcards(parsedFlashcards);
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
-        console.error('Error generating flashcards:', error);
+      console.error('Error generating flashcards:', error);
+      alert('Failed to generate flashcards. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
-}
+  };
 
+  const handleCardClick = (id) => {
+    setFlipped((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
-const handleCardClick = (id) => {
-  setFlipped((prev) => ({
-    ...prev,
-    [id]: !prev[id],
-  }));
-};
+  const handleEditCard = (index) => {
+    setEditingCard(flashcards[index]);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false);
+    setEditingCard(null);
+  };
+
+  const handleEditDialogSave = () => {
+    const updatedFlashcards = flashcards.map((card) =>
+      card === editingCard ? { ...editingCard } : card
+    );
+    setFlashcards(updatedFlashcards);
+    handleEditDialogClose();
+  };
 
   const viewDeck = async (deckName) => {
     setSelectedDeck(deckName);
@@ -182,7 +206,7 @@ const handleCardClick = (id) => {
               </button>
             </div>
 
-            {flashcards.length > 0 && (
+           {flashcards.length > 0 && (
               <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6 mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                   Flashcards Preview
@@ -191,28 +215,43 @@ const handleCardClick = (id) => {
                   {flashcards.map((flashcard, index) => (
                     <div
                       key={index}
-                      className="bg-gray-50 p-4 rounded-md"
-                      onClick={() => handleCardClick(index)}
+                      className="bg-gray-50 p-4 rounded-md relative"
                     >
                       <div
                         className={`relative w-full h-40 ${
                           flipped[index] ? "rotate-y-180" : ""
                         } transform transition-transform duration-500`}
+                        onClick={() => handleCardClick(index)}
+                        style={{
+                          transformStyle: 'preserve-3d',
+                        }}
                       >
                         <div className="absolute inset-0 backface-hidden">
                           <div className="w-full h-full flex items-center justify-center bg-white shadow rounded-md p-4">
-                          <Typography variant="h5" component="div">
-                                                            {flashcard.front}
-                                                        </Typography>
+                            <Typography variant="h5" component="div">
+                              {flashcard.front}
+                            </Typography>
                           </div>
                         </div>
-                        <div className="absolute inset-0 backface-hidden rotate-y-180">
+                        <div 
+                          className="absolute inset-0 backface-hidden"
+                          style={{
+                            transform: 'rotateY(180deg)',
+                          }}
+                        >
                           <div className="w-full h-full flex items-center justify-center bg-purple-100 shadow rounded-md p-4">
-                          <Typography>
-                                                            {flashcard.back}
-                                                        </Typography>                          </div>
+                            <Typography variant="h5" component="div">
+                              {flashcard.back}
+                            </Typography>
+                          </div>
                         </div>
                       </div>
+                      <IconButton
+                        className="absolute top-2 right-2"
+                        onClick={() => handleEditCard(index)}
+                      >
+                        <EditIcon />
+                      </IconButton>
                     </div>
                   ))}
                 </div>
@@ -258,55 +297,55 @@ const handleCardClick = (id) => {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {selectedDeckCards.map((flashcard, index) => (
-                      <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Card>
-                              <CardActionArea onClick={() => handleCardClick(index)}>
-                                  <CardContent>
-                                      <Box sx={{
-                                          perspective: '1000px',
-                                          '& > div': {
-                                              transition: 'transform 0.6s',
-                                              transformStyle: 'preserve-3d',
-                                              position: 'relative',
-                                              width: '100%',
-                                              height: '200px',
-                                              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                                              transform: flipped[index]
-                                                  ? 'rotateY(180deg)'
-                                                  : 'rotateY(0deg)',
-                                          },
-                                          '& > div > div': {
-                                              position: 'absolute',
-                                              width: '100%',
-                                              height: '200px',
-                                              backfaceVisibility: 'hidden',
-                                              display: 'flex',
-                                              justifyContent: 'center',
-                                              alignItems: 'center',
-                                              padding: 2,
-                                              boxSizing: 'border-box'
-                                          },
-                                          '& > div > div:nth-of-type(2)': {
-                                              transform: 'rotateY(180deg)'
-                                          }
-                                      }}>
-                                          <div>
-                                              <div>
-                                                  <Typography variant="h5" component="div">
-                                                      {flashcard.front}
-                                                  </Typography>
-                                              </div>
-                                              <div>
-                                                  <Typography variant="h5" component="div">
-                                                      {flashcard.back}
-                                                  </Typography>
-                                              </div>
-                                          </div>
-                                      </Box>
-                                  </CardContent>
-                              </CardActionArea>
-                          </Card>
-                      </Grid>
+                    <Grid item xs={12} sm={6} md={4} key={index}>
+                    <Card>
+                        <CardActionArea onClick={() => handleCardClick(index)}>
+                            <CardContent>
+                                <Box sx={{
+                                    perspective: '1000px',
+                                    '& > div': {
+                                        transition: 'transform 0.6s',
+                                        transformStyle: 'preserve-3d',
+                                        position: 'relative',
+                                        width: '100%',
+                                        height: '200px',
+                                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                                        transform: flipped[index]
+                                            ? 'rotateY(180deg)'
+                                            : 'rotateY(0deg)',
+                                    },
+                                    '& > div > div': {
+                                        position: 'absolute',
+                                        width: '100%',
+                                        height: '200px',
+                                        backfaceVisibility: 'hidden',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        padding: 2,
+                                        boxSizing: 'border-box'
+                                    },
+                                    '& > div > div:nth-of-type(2)': {
+                                        transform: 'rotateY(180deg)'
+                                    }
+                                }}>
+                                    <div>
+                                        <div>
+                                            <Typography variant="h5" component="div">
+                                                {flashcard.front}
+                                            </Typography>
+                                        </div>
+                                        <div>
+                                            <Typography variant="h5" component="div">
+                                                {flashcard.back}
+                                            </Typography>
+                                        </div>
+                                    </div>
+                                </Box>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                </Grid>
                   ))}
                 </div>
               </div>
@@ -364,6 +403,32 @@ const handleCardClick = (id) => {
           </Grid>
         </Container>
       </footer>
+      <Dialog open={editDialogOpen} onClose={handleEditDialogClose}>
+        <DialogTitle>Edit Flashcard</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Front"
+            type="text"
+            fullWidth
+            value={editingCard?.front || ''}
+            onChange={(e) => setEditingCard({ ...editingCard, front: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Back"
+            type="text"
+            fullWidth
+            value={editingCard?.back || ''}
+            onChange={(e) => setEditingCard({ ...editingCard, back: e.target.value })}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditDialogClose}>Cancel</Button>
+          <Button onClick={handleEditDialogSave}>Save</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }
