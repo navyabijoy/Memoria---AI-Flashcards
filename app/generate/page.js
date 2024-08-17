@@ -1,60 +1,67 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-    Grid,
-    Button,
-    Container,
-    Box,
-    Typography,
-    Card,
-    CardContent,
-    CardActionArea,
-    TextField,
-    Paper,
-    DialogActions,
-    Dialog,
-    DialogContent,
-    DialogContentText,
-    DialogTitle
-} from "@mui/material";
+import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import Link from 'next/link';
 import { writeBatch, doc, collection, getDoc } from 'firebase/firestore';
-import { db } from './../firebase'; // Adjust the path to your firebase config
+import { db } from '../../firebase'; // Adjust the path to your firebase config
+import Navbar from '../components/Navbar/Navbar';
+import { Box, Container, Grid, Typography, IconButton } from '@mui/material';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import MailIcon from '@mui/icons-material/Mail';
 
-export default function Generate() {
+export default function Dashboard() {
     const [flashcards, setFlashcards] = useState([]);
-    const [flipped, setFlipped] = useState([]);
+    const [flipped, setFlipped] = useState({});
     const [text, setText] = useState('');
     const [name, setName] = useState('');
-    const [open, setOpen] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredDecks, setFilteredDecks] = useState([]);
+    const [editingCard, setEditingCard] = useState(null);
     const router = useRouter();
-    const [user, setUser] = useState(null); // Adjust how you get the user information
+    const { user } = useUser();
+
+    useEffect(() => {
+        if (user) {
+            fetchUserDecks();
+        }
+    }, [user]);
+
+    const fetchUserDecks = async () => {
+        if (!user) return;
+        const userDocRef = doc(collection(db, 'users'), user.id);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+            const collections = docSnap.data().flashcards || [];
+            setFilteredDecks(collections);
+        }
+    };
 
     const handleSubmit = async () => {
+        setIsGenerating(true);
         try {
             const flash = await fetch('api/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ text }), // Convert text to JSON string
+                body: JSON.stringify({ text }),
             });
     
             const jsonData = await flash.json();
     
             if (jsonData && jsonData.flashcards) {
-                // Parse the flashcards JSON string
                 const parsedFlashcards = JSON.parse(jsonData.flashcards).flashcards;
                 setFlashcards(parsedFlashcards);
             }
-    
-            console.log(flashcards);
         } catch (error) {
             console.error('Error:', error);
         }
+        setIsGenerating(false);
     };
-    
 
     const handleCardClick = (id) => {
         setFlipped((prev) => ({
@@ -62,14 +69,19 @@ export default function Generate() {
             [id]: !prev[id],
         }));
     }
+    
+    const viewDeck = async (deckName) => {
+        router.push(`/flashcards/${deckName}`);
+    };
 
-    const handleOpen = () => {
-        setOpen(true);
-    }
+    const handleEdit = (index) => {
+        setEditingCard(index);
+    };
 
-    const handleClose = () => {
-        setOpen(false);
-    }
+    const handleSaveEdit = (index) => {
+        setEditingCard(null);
+        // Save changes to the database if needed
+    };
 
     const saveFlashcards = async () => {
         if (!name) {
@@ -101,123 +113,183 @@ export default function Generate() {
         });
 
         await batch.commit();
-        handleClose();
-        router.push('/flashcards');
+        setName('');
+        setText('');
+        setFlashcards([]);
+        fetchUserDecks();
+    }
+
+    const handleSearch = (e) => {
+        const term = e.target.value.toLowerCase();
+        setSearchTerm(term);
+        const filtered = filteredDecks.filter(deck => deck.name.toLowerCase().includes(term));
+        setFilteredDecks(filtered);
     }
 
     return (
-        <Container maxWidth="md">
-            <Box sx={{
-                mt: 4, mb: 6, display: "flex", flexDirection: 'column', alignItems: 'center'
-            }}>
-                <Typography variant="h4">Generate Flashcards</Typography>
-                <Paper sx={{ p: 4, width: '100%' }}>
-                    <TextField
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        label="Enter text or topic"
-                        fullWidth
-                        multiline
-                        rows={4}
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                    />
-                    <Button variant='contained' color='primary' onClick={handleSubmit}>Submit</Button>
-                </Paper>
-            </Box>
-            {flashcards.length > 0 && (
-                <Box sx={{ mt: 4 }}>
-                    <Typography variant="h4">Flashcards Preview</Typography>
-                    <Grid container spacing={3}>
-                        {flashcards.map((flashcard, index) => (
-                            <Grid item xs={12} sm={6} md={4} key={index}>
-                                <Card>
-                                    <CardActionArea onClick={() => handleCardClick(index)}>
-                                        <CardContent>
-                                            <Box sx={{
-                                                perspective: '1000px',
-                                                '& > div': {
-                                                    transition: 'transform 0.6s',
-                                                    transformStyle: 'preserve-3d',
-                                                    position: 'relative',
-                                                    width: '100%',
-                                                    height: '200px',
-                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                                                    transform: flipped[index]
-                                                        ? 'rotateY(180deg)'
-                                                        : 'rotateY(0deg)',
-                                                },
-                                                '& > div > div': {
-                                                    position: 'absolute',
-                                                    width: '100%',
-                                                    height: '200px',
-                                                    backfaceVisibility: 'hidden',
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                    padding: 2,
-                                                    boxSizing: 'border-box'
-                                                },
-                                                '& > div > div:nth-of-type(2)': {
-                                                    transform: 'rotateY(180deg)'
-                                                }
-                                            }}>
-                                                <div>
-                                                    <div>
-                                                        <Typography variant="h5" component="div">
-                                                            {flashcard.front}
-                                                        </Typography>
-                                                    </div>
-                                                    <div>
-                                                        <Typography variant="h5" component="div">
-                                                            {flashcard.back}
-                                                        </Typography>
+        <div className="min-h-screen bg-gray-100">
+            <Navbar />
+
+            <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                <SignedIn>
+                    <div className="px-4 py-6 sm:px-0">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Welcome to Memoria</h1>
+                        
+                        <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6 mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Generate New Flashcards</h2>
+                            <textarea
+                                value={text}
+                                onChange={(e) => setText(e.target.value)}
+                                placeholder="Enter text or topic"
+                                className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                                rows="4"
+                            />
+                            <button 
+                                onClick={handleSubmit}
+                                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                                disabled={isGenerating}
+                            >
+                                {isGenerating ? 'Generating...' : 'Generate Flashcards'}
+                            </button>
+                        </div>
+
+                        {flashcards.length > 0 && (
+                            <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6 mb-6">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-4">Flashcards Preview</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {flashcards.map((flashcard, index) => (
+                                        <div 
+                                            key={index} 
+                                            className="bg-gray-50 p-4 rounded-md"
+                                        >
+                                            <div className={`relative w-full h-40 ${flipped[index] ? 'rotate-y-180' : ''} transform transition-transform duration-500`}>
+                                                <div className="absolute inset-0 backface-hidden">
+                                                    <div className="w-full h-full flex items-center justify-center bg-white shadow rounded-md p-4">
+                                                        {editingCard === index ? (
+                                                            <textarea
+                                                                value={flashcard.front}
+                                                                onChange={(e) => {
+                                                                    const newFlashcards = [...flashcards];
+                                                                    newFlashcards[index].front = e.target.value;
+                                                                    setFlashcards(newFlashcards);
+                                                                }}
+                                                                className="w-full h-full p-2 border border-gray-300 rounded-md"
+                                                            />
+                                                        ) : (
+                                                            <p className="text-center" onClick={() => handleCardClick(index)}>{flashcard.front}</p>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </Box>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
-                            </Grid>
-                        ))}
+                                                <div className="absolute inset-0 backface-hidden rotate-y-180">
+                                                    <div className="w-full h-full flex items-center justify-center bg-purple-100 shadow rounded-md p-4">
+                                                        {editingCard === index ? (
+                                                            <textarea
+                                                                value={flashcard.back}
+                                                                onChange={(e) => {
+                                                                    const newFlashcards = [...flashcards];
+                                                                    newFlashcards[index].back = e.target.value;
+                                                                    setFlashcards(newFlashcards);
+                                                                }}
+                                                                className="w-full h-full p-2 border border-gray-300 rounded-md"
+                                                            />
+                                                        ) : (
+                                                            <p className="text-center" onClick={() => handleCardClick(index)}>{flashcard.back}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 flex justify-end">
+                                                {editingCard === index ? (
+                                                    <button 
+                                                        onClick={() => handleSaveEdit(index)}
+                                                        className="px-2 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition-colors"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => handleEdit(index)}
+                                                        className="px-2 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-6">
+                                    <input
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="Enter deck name"
+                                        className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                                    />
+                                    <button 
+                                        onClick={saveFlashcards}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                                    >
+                                        Save Deck
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Decks</h2>
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={handleSearch}
+                                placeholder="Search decks..."
+                                className="w-full p-2 border border-gray-300 rounded-md mb-4"
+                            />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                {filteredDecks.map((deck, index) => (
+                                    <div
+                                        key={index}
+                                        onClick={() => viewDeck(deck.name)}
+                                        className="bg-gray-50 p-4 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
+                                    >
+                                        <Typography variant="h6">{deck.name}</Typography>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </SignedIn>
+                <SignedOut>
+                    <div className="text-center py-10">
+                        <p className="text-lg font-semibold">You are not signed in</p>
+                        <Link href="/signin" className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Sign In
+                        </Link>
+                    </div>
+                </SignedOut>
+            </main>
+
+            <footer className="bg-gray-800 text-white py-4">
+                <Container maxWidth="md">
+                    <Grid container spacing={2} justifyContent="center">
+                        <Grid item>
+                            <IconButton href="https://twitter.com/yourtwitterhandle" target="_blank" rel="noopener noreferrer">
+                                <TwitterIcon />
+                            </IconButton>
+                        </Grid>
+                        <Grid item>
+                            <IconButton href="https://linkedin.com/in/yourlinkedinprofile" target="_blank" rel="noopener noreferrer">
+                                <LinkedInIcon />
+                            </IconButton>
+                        </Grid>
+                        <Grid item>
+                            <IconButton href="mailto:navyabijoy14@gmail.com" target="_blank" rel="noopener noreferrer">
+                                <MailIcon />
+                            </IconButton>
+                        </Grid>
                     </Grid>
-                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-                        <Button variant='contained' color='primary' onClick={handleOpen}>Save Deck</Button>
-                    </Box>
-                </Box>
-            )}
-
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>Save Deck</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Please enter a name for your flashcard collection
-                    </DialogContentText>
-                    <TextField autoFocus margin="dense" label="Collection Name" type="text" fullWidth value={name} onChange={(e) => setName(e.target.value)} variant="outlined" />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={saveFlashcards}>Save</Button>
-                </DialogActions>
-            </Dialog>
-        </Container>
+                </Container>
+            </footer>
+        </div>
     );
-    const path = require('path');
-
-module.exports = {
-  // ... other webpack config
-  resolve: {
-    alias: {
-      'protobufjs/google/protobuf/type.json': path.resolve(__dirname, 'node_modules/protobufjs/google/protobuf/type.json')
-    }
-  },
-  // Add this to print the resolved path for debugging
-  plugins: [
-    new webpack.ProgressPlugin((percentage, message, ...args) => {
-      if (message.indexOf('resolved') >= 0) {
-        console.log(message);
-      }
-    })
-  ]
-};
 }

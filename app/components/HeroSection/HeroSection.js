@@ -1,15 +1,14 @@
 import React from 'react';
-import MeshLines from './MeshLines.css';
-import Content from './Content.css';
-import styles from './HeroSection.css'; // Include your CSS file
+import MeshLines from './meshlines';
+import Content from './content';
 
 const HeroSection = () => {
-    return (
-        <section className={styles.herosection}>
-            <MeshLines />
-            <Content />
-        </section>
-    );
+  return (
+    <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      <MeshLines />
+      <Content />
+    </section>
+  );
 };
 
 export default HeroSection;
