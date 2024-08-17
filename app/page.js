@@ -101,7 +101,7 @@ export default function Home() {
             <Box
               sx={{
                 display: 'flex',
-                height: '325px',
+                height: '340px',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 alignItems: 'center',
