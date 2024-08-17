@@ -240,7 +240,7 @@ export default function Dashboard() {
                           }}
                         >
                           <div className="w-full h-full flex items-center justify-center bg-purple-100 shadow rounded-md p-4">
-                            <Typography variant="h5" component="div">
+                            <Typography variant="h6" component="div">
                               {flashcard.back}
                             </Typography>
                           </div>
