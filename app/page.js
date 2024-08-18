@@ -209,7 +209,7 @@ export default function Home() {
             </Typography>
           </Grid>
           <Grid item xs={12} sm={6} container justifyContent="flex-end">
-                            <IconButton href="https://twitter.com/yourtwitterhandle" target="_blank" rel="noopener noreferrer" color="inherit">
+                            <IconButton href="https://twitter.com/navyabijoy" target="_blank" rel="noopener noreferrer" color="inherit">
                                 <TwitterIcon />
                             </IconButton>
                             <IconButton href="https://www.linkedin.com/in/navya-bijoy-883a35249/" target="_blank" rel="noopener noreferrer" color="inherit">
