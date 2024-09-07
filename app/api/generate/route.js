@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import axios from 'axios'; // or any HTTP client library you're using
+import axios from 'axios'; 
 
 const systemPrompt = `You are a flashcard creator. Your task is to generate concise and effective flashcards that facilitate learning and retention of information. Each flashcard should:
 
@@ -30,18 +30,18 @@ export async function POST(req) {
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: data },
             ],
-            model: 'qwen/qwen-2-7b-instruct:free', // Specify the Qwen model
+            model: 'qwen/qwen-2-7b-instruct:free', 
         }, {
             headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, // Use environment variable for the API key
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, 
                 'Content-Type': 'application/json',
             },
         });
 
-        const flashcards = response.data.choices[0].message.content; // Access the correct path to retrieve flashcards
-        return NextResponse.json({ flashcards }); // Return the flashcards in the required format
+        const flashcards = response.data.choices[0].message.content; 
+        return NextResponse.json({ flashcards }); 
     } catch (error) {
         console.error('Error generating flashcards:', error);
-        return NextResponse.error(); // Handle the error accordingly
+        return NextResponse.error(); 
     }
 }
