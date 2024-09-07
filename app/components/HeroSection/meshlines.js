@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Separate ConicGradientEffect component
 const ConicGradientEffect = () => {
   const gradientStyle = {
     width: '300px',
@@ -17,7 +16,6 @@ const ConicGradientEffect = () => {
   return <div style={gradientStyle}></div>;
 };
 
-// MeshLines component using ConicGradientEffect
 const MeshLines = () => {
   return (
     <div className="absolute inset-0 flex items-center justify-center w-full h-full overflow-hidden">
