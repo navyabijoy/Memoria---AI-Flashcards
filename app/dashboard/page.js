@@ -79,7 +79,7 @@ export default function Dashboard() {
       const jsonData = await response.json();
   
       if (jsonData && jsonData.flashcards) {
-        // Ensure we're getting an array of flashcards
+        // getting an array of flashcards
         const parsedFlashcards = Array.isArray(jsonData.flashcards) 
           ? jsonData.flashcards 
           : JSON.parse(jsonData.flashcards).flashcards;
