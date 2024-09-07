@@ -1,9 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from 'firebase/firestore'; // Correct import for Firestore
+import { getFirestore } from 'firebase/firestore'; 
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: "memoria-flashcards.firebaseapp.com",
@@ -20,7 +19,6 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firestore
 const db = getFirestore(app);
 
-// Initialize Analytics (if you want to use it)
 
 
 export {db};
